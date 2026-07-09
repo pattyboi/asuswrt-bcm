@@ -14,8 +14,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307 USA
  *
- * Copyright 2018-2023, SWRTdev.
- * Copyright 2018-2023, paldier <paldier@hotmail.com>.
+ * Copyright 2018-2026, SWRTdev.
+ * Copyright 2018-2026, paldier <paldier@hotmail.com>.
  * All Rights Reserved.
  * 
  */
@@ -109,7 +109,7 @@ int ej_dbus_get_def(int eid, webs_t wp, int argc, char_t **argv)
 	dbclient_start(&client);
 	ret = dbclient_get(&client, name, db_buf, sizeof(db_buf));
 	dbclient_end(&client);
-	if(ret == 0)
+	if(ret == 0 && db_buf[0])
 		ret += websWrite(wp, "%s", db_buf);
 	else
 		ret = websWrite(wp, "%s", output);
