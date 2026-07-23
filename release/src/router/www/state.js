@@ -170,7 +170,7 @@ var Session = Session || (function(){
 		var store = (win.name ? JSON.parse(win.name) : {});
 		function Save() {
 			win.name = JSON.stringify(store);
-		};
+		}
 		
 		if (window.addEventListener) window.addEventListener("unload", Save, false);
 		else if (window.attachEvent) window.attachEvent("onunload", Save);
