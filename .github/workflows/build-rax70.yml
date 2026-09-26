@@ -1,0 +1,55 @@
+name: Build RAX70 (rt-ax95q)
+run-name: "Build RT-AX95Q/RAX70 firmware"
+on:
+  workflow_dispatch: {}
+jobs:
+  build-job:
+    name: Build rt-ax95q
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    container:
+      image: paldier/swrt-docker:latest
+      options: --user docker
+      volumes:
+        - /mnt:/project
+      env:
+        MODELCFG: "rt-ax95q"
+        SDK: "src-rt-5.02axhnd.675x"
+        GIT_REPO: "https://github.com/pattyboi/asuswrt-bcm.git"
+        GIT_REF: "master"
+        PROJECT_DIR: "/project/asuswrt-bcm"
+        PROJECTBASEDIR: "/project"
+    steps:
+      - name: Disk available
+        run: df -h
+      - name: Fix permissions in docker image
+        run: sudo chown -R docker:docker /github/home /home/docker /project
+      - name: Fetch code
+        run: |
+          cd /project
+          git clone --depth 1 --branch "${GIT_REF}" "$GIT_REPO"
+          ls /home/docker
+      - name: Build
+        run: |
+          echo "----- Space available -----"
+          df -h
+          cd "${PROJECT_DIR}/release/${SDK}"
+          echo "----- Setting toolchains -----"
+          sudo /home/docker/envs/bcm.sh
+          echo "----- BUILD ${MODELCFG} -----"
+          make "${MODELCFG}"
+      - name: Collect firmware artifacts
+        if: always()
+        run: |
+          mkdir -p /tmp/artifact-out
+          find "${PROJECT_DIR}/release/${SDK}" -maxdepth 3 -type d -iname "image*" -exec cp -rv {} /tmp/artifact-out/ \; || true
+          find "${PROJECT_DIR}/release/${SDK}" -maxdepth 4 \( -iname "*.trx" -o -iname "*.w" -o -iname "*.chk" \) -exec cp -v {} /tmp/artifact-out/ \; || true
+          ls -laR /tmp/artifact-out || true
+      - name: Upload firmware artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rax70-rt-ax95q-firmware
+          path: /tmp/artifact-out
+          if-no-files-found: warn
+          retention-days: 14
